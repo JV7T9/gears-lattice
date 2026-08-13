@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Human-AI Relations — The Loop Behind the Model</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;700;900&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+  :root{
+    --bg:#14140f; --panel:#1c1c16; --panel-line:#302e26; --iron:#3a382e;
+    --brass:#b08968; --brass-dim:#8a6b52; --rust:#a8412f; --paper:#e8e2d0;
+    --dim:#8a8570; --dim2:#5f5c4d; --caught:#5b8c78; --human:#6f8fae;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: radial-gradient(ellipse 900px 600px at 50% -10%, #201f17 0%, var(--bg) 60%);
+    color:var(--paper); font-family:'Source Serif 4', serif;
+    min-height:100vh; padding:56px 20px 80px;
+  }
+  .wrap{max-width:1040px;margin:0 auto;}
+
+  .back-link{
+    font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--dim); text-decoration:none;
+    display:inline-block; margin-bottom:32px;
+  }
+  .back-link:hover{ color:var(--brass); }
+
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:.22em;
+    text-transform:uppercase; color:var(--brass); display:flex; align-items:center;
+    gap:10px; margin-bottom:18px;
+  }
+  .eyebrow::before{ content:""; width:22px;height:1px; background:var(--brass-dim); display:inline-block; }
+
+  h1{
+    font-family:'Big Shoulders Display', sans-serif; font-weight:900;
+    font-size:clamp(36px, 6vw, 64px); line-height:.95; letter-spacing:-0.01em;
+    margin:0 0 22px; text-transform:uppercase;
+  }
+  h1 span{ color:var(--brass); }
+
+  .thesis{ font-size:clamp(15px, 1.6vw, 18px); line-height:1.65; color:#cdc7b4; max-width:660px; }
+
+  .stage{ margin-top:48px; display:grid; grid-template-columns: minmax(0,1fr) minmax(260px, 320px); gap:28px; align-items:start; }
+  @media (max-width:760px){ .stage{grid-template-columns:1fr;} }
+
+  .diagram-panel{
+    background: radial-gradient(circle at 50% 50%, #241f16 0%, var(--panel) 65%);
+    border:1px solid var(--panel-line); border-radius:4px; padding:8px; position:relative;
+  }
+  .diagram-panel::before{
+    content:"FIG. 1 — THE INTERACTION LOOP"; position:absolute; top:14px; left:18px;
+    font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:.15em; color:var(--dim2);
+  }
+
+  svg{ width:100%; height:auto; display:block; position:relative; z-index:2; }
+
+  .sphere-stage{
+    position:absolute; top:50%; left:50%; width:34%; aspect-ratio:1;
+    transform:translate(-50%,-50%); z-index:1; pointer-events:none;
+  }
+  .sphere-stage canvas{ width:100% !important; height:100% !important; display:block; }
+
+  .edge-loop{ fill:none; stroke:var(--brass); stroke-width:1.7; stroke-dasharray:3 7; opacity:.9; }
+  .edge-loop.flow{ animation: dashflow 6s linear infinite; }
+  .edge-return{ fill:none; stroke:var(--human); stroke-width:1.7; stroke-dasharray:2 5; opacity:.75; }
+  .edge-return.flow{ animation: dashflow 4s linear infinite reverse; }
+  @keyframes dashflow{ to{ stroke-dashoffset:-100; } }
+
+  .node{ cursor:pointer; }
+  .node circle.core{ fill:var(--panel); stroke:var(--iron); stroke-width:1.4; transition:stroke .25s ease, fill .25s ease; }
+  .node:hover circle.core, .node.active circle.core{
+    stroke:var(--brass); fill:#242119;
+    filter: drop-shadow(0 0 10px rgba(176,137,104,.65)) drop-shadow(0 0 20px rgba(176,137,104,.28));
+  }
+  .node.human-node circle.core{ }
+  .node.human-node:hover circle.core, .node.human-node.active circle.core{
+    stroke:var(--human);
+    filter: drop-shadow(0 0 10px rgba(111,143,174,.65)) drop-shadow(0 0 20px rgba(111,143,174,.28));
+  }
+  .node text.label{
+    font-family:'IBM Plex Mono', monospace; font-size:11px; font-weight:600;
+    letter-spacing:.03em; fill:var(--paper); text-transform:uppercase; text-anchor:middle;
+  }
+  .node text.sub{
+    font-family:'IBM Plex Mono', monospace; font-size:8px; fill:var(--dim);
+    text-anchor:middle; letter-spacing:.02em;
+  }
+  .node:focus{ outline:none; }
+  .node:focus circle.core{ stroke:var(--brass); stroke-width:2; }
+
+  .detail{
+    background:var(--panel); border:1px solid var(--panel-line); border-radius:4px;
+    padding:22px 22px 20px; min-height:360px; display:flex; flex-direction:column;
+  }
+  .detail .tag{
+    font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:.18em;
+    color:var(--brass); text-transform:uppercase; margin-bottom:10px;
+  }
+  .detail.human-tag .tag{ color:var(--human); }
+  .detail h2{
+    font-family:'Big Shoulders Display', sans-serif; font-weight:700; font-size:24px;
+    text-transform:uppercase; letter-spacing:.01em; margin:0 0 14px; color:var(--paper);
+  }
+  .detail p{ font-size:14px; line-height:1.6; color:#cdc7b4; margin:0 0 12px; }
+  .detail .feeds{
+    margin-top:auto; padding-top:14px; border-top:1px solid var(--panel-line);
+    font-family:'IBM Plex Mono', monospace; font-size:10px; color:var(--dim); letter-spacing:.02em;
+  }
+  .detail .feeds b{ color:var(--brass); font-weight:500; }
+
+  .footnote{
+    margin-top:20px; padding:14px 18px; border:1px dashed var(--panel-line); border-radius:4px;
+    font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:var(--dim); line-height:1.6;
+  }
+  .legend{
+    display:flex; gap:20px; margin-top:14px; flex-wrap:wrap;
+    font-family:'IBM Plex Mono', monospace; font-size:10.5px; color:var(--dim);
+  }
+  .legend span{ display:inline-flex; align-items:center; gap:6px; }
+  .legend i{ width:10px; height:10px; border-radius:50%; display:inline-block; }
+
+  @media (prefers-reduced-motion: reduce){ .edge-loop.flow, .edge-return.flow{ animation:none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <a class="back-link" href="index.html">← Back to the lattice</a>
+
+  <div class="eyebrow">Human-AI Relations — a working diagram</div>
+  <h1>The Loop <span>Behind the Model</span></h1>
+  <p class="thesis">
+    This isn't a diagram of a prediction. It's a diagram of the process that
+    produced one — symbolic instinct, structured into a model, run against real
+    facts by one AI, checked for its epistemic honesty by another, and returned
+    as a dated, public, falsifiable trail. The loop doesn't end in an answer.
+    It ends back at a person deciding what to make of it.
+  </p>
+
+  <div class="stage">
+    <div class="diagram-panel">
+      <div class="sphere-stage" id="sphereStage"></div>
+      <svg viewBox="0 0 600 600" role="img" aria-label="A six-node loop diagram showing Human Instinct, Model, Generation, Verification, and Trail, returning to Interpretation, with a rotating six-sectored glowing sphere at the centre.">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="#b08968"></path>
+          </marker>
+          <marker id="arrowReturn" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="#6f8fae"></path>
+          </marker>
+        </defs>
+
+        <!-- 6 nodes around a circle, 60° apart, starting at top -->
+        <!-- order: instinct(top) -> model -> generation -> verification(bottom) -> trail -> interpretation -> back to instinct -->
+
+        <path class="edge-loop flow" marker-end="url(#arrow)" d="M 355 92 Q 470 130 508 245"></path>
+        <path class="edge-loop flow" marker-end="url(#arrow)" d="M 508 305 Q 490 430 385 495"></path>
+        <path class="edge-loop flow" marker-end="url(#arrow)" d="M 325 508 Q 200 490 135 385"></path>
+        <path class="edge-loop flow" marker-end="url(#arrow)" d="M 108 325 Q 90 200 195 122"></path>
+
+        <!-- the return path: interpretation back to instinct, styled differently (human/blue, reverse flow) -->
+        <path class="edge-return flow" marker-end="url(#arrowReturn)" d="M 245 92 Q 175 55 245 65"></path>
+
+        <!-- Node: Human Instinct (top) -->
+        <g class="node human-node" tabindex="0" role="button" aria-label="Human instinct" data-node="instinct" transform="translate(300,80)">
+          <circle class="core" r="44"></circle>
+          <text class="label" y="-2">Instinct</text>
+          <text class="sub" y="13">human</text>
+        </g>
+
+        <!-- Node: Model (upper right) -->
+        <g class="node" tabindex="0" role="button" aria-label="Structured model" data-node="model" transform="translate(508,275)">
+          <circle class="core" r="44"></circle>
+          <text class="label" y="-2">Model</text>
+          <text class="sub" y="13">structure</text>
+        </g>
+
+        <!-- Node: Generation (lower right) -->
+        <g class="node" tabindex="0" role="button" aria-label="AI generation of a prediction" data-node="generation" transform="translate(400,508)">
+          <circle class="core" r="44"></circle>
+          <text class="label" y="-2">Generation</text>
+          <text class="sub" y="13">AI engine</text>
+        </g>
+
+        <!-- Node: Verification (lower left) -->
+        <g class="node" tabindex="0" role="button" aria-label="AI verification and fact-check" data-node="verification" transform="translate(200,508)">
+          <circle class="core" r="44"></circle>
+          <text class="label" y="-2">Verification</text>
+          <text class="sub" y="13">AI engine</text>
+        </g>
+
+        <!-- Node: Trail (upper left) -->
+        <g class="node" tabindex="0" role="button" aria-label="Dated public trail" data-node="trail" transform="translate(92,275)">
+          <circle class="core" r="44"></circle>
+          <text class="label" y="-2">Trail</text>
+          <text class="sub" y="13">record</text>
+        </g>
+
+        <!-- Node: Interpretation (top left, near instinct) -->
+        <g class="node human-node" tabindex="0" role="button" aria-label="Human interpretation" data-node="interpretation" transform="translate(200,90)">
+          <circle class="core" r="40"></circle>
+          <text class="label" y="-2">Reader</text>
+          <text class="sub" y="12">human</text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="detail" id="detail">
+      <div class="tag">Select a stage</div>
+      <h2>How this reads</h2>
+      <p>Five stages plus the reader, arranged as a loop rather than a line. The
+      two human-touched stages — Instinct and Reader — are marked in blue.
+      The three AI/model stages in between are brass, the same palette as the
+      Gears diagram.</p>
+      <p>Follow the loop clockwise from Instinct. The one thing to notice: it
+      doesn't terminate at Trail. It returns to a person. Nothing in this loop
+      claims the last word.</p>
+      <div class="feeds">Click any stage to open its detail →</div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span><i style="background:var(--human);"></i> Human-touched stage</span>
+    <span><i style="background:var(--brass);"></i> Model / AI stage</span>
+  </div>
+
+  <div class="footnote">
+    <b>Reading note —</b> this diagram documents a real, already-run process —
+    it isn't a proposal for how human-AI interaction should work in general, just
+    an honest map of how this specific model got tested. See the
+    <a href="testing.html" style="color:var(--brass); border-bottom:1px dashed var(--brass);">Testing Portal</a>
+    for the actual run this diagram is describing.
+  </div>
+
+</div>
+
+<script>
+const data = {
+  instinct: {
+    tag: "01 — Human",
+    title: "Instinct",
+    body: [
+      "A pattern gets noticed before it can be proven — a hunch that a structure repeats across cases that otherwise look unrelated.",
+      "Nothing here is checkable yet. This stage is allowed to be wrong, vague, or half-formed. Its only job is to be worth testing."
+    ],
+    feeds: "Feeds → Model: the instinct gets translated into named, checkable variables."
+  },
+  model: {
+    tag: "02 — Structure",
+    title: "Model",
+    body: [
+      "The instinct is broken into a small number of named, trackable variables — in this case, four gears: control, selection, information flow, and moral cost.",
+      "This is where a feeling becomes a framework. It doesn't make the framework true. It makes it possible to be wrong in a specific, checkable way."
+    ],
+    feeds: "Feeds → Generation: the model gets run against real, current facts."
+  },
+  generation: {
+    tag: "03 — AI Engine",
+    title: "Generation",
+    body: [
+      "An AI is prompted to apply the model to a live, unresolved situation — pulling in real, current, searchable facts and forming a claim.",
+      "This stage is fast and fluent, and that's exactly its risk: fluency can dress a retrodiction — a description of the past — in the grammar of a prediction, without anyone intending it to."
+    ],
+    feeds: "Feeds → Verification: the claim gets checked, not just the facts inside it."
+  },
+  verification: {
+    tag: "04 — AI Engine",
+    title: "Verification",
+    body: [
+      "A second AI checks two separate things: are the underlying facts actually true, and — just as important — is the claim actually a prediction, or a completed-fact statement wearing a prediction's grammar.",
+      "This is the stage that caught the real error in this process: not a false fact, but a false tense — an outcome described as settled when it was still open."
+    ],
+    feeds: "Feeds → Trail: the corrected, honestly-dated claim gets written down."
+  },
+  trail: {
+    tag: "05 — Record",
+    title: "Trail",
+    body: [
+      "The corrected claim is published with a date, a falsifiability condition, and an acknowledged weakness — publicly, before the outcome is known.",
+      "The trail is not allowed to be edited later to look more accurate. If it's wrong, it stays wrong, visibly, with a note added — not quietly rewritten."
+    ],
+    feeds: "Feeds → Reader: the record is handed over, not the conclusion."
+  },
+  interpretation: {
+    tag: "06 — Human",
+    title: "Reader",
+    body: [
+      "This is where the loop actually ends — not at an answer, but at a person deciding what the trail means to them.",
+      "Nothing upstream claims the authority to make that decision for the reader. The loop returns to instinct again from here — a new hunch, a new test — rather than closing into a final word."
+    ],
+    feeds: "Loops back → Instinct: a new pattern, a new test, same discipline."
+  }
+};
+
+const nodes = document.querySelectorAll('.node');
+const detail = document.getElementById('detail');
+
+function render(key){
+  const d = data[key];
+  const isHuman = (key === 'instinct' || key === 'interpretation');
+  detail.className = 'detail' + (isHuman ? ' human-tag' : '');
+  detail.innerHTML = `
+    <div class="tag">${d.tag}</div>
+    <h2>${d.title}</h2>
+    ${d.body.map(p => `<p>${p}</p>`).join('')}
+    <div class="feeds">${d.feeds}</div>
+  `;
+  nodes.forEach(n => n.classList.toggle('active', n.dataset.node === key));
+  if(window.__illuminateWedge) window.__illuminateWedge(key);
+}
+
+nodes.forEach(n => {
+  n.addEventListener('click', () => render(n.dataset.node));
+  n.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter' || e.key === ' '){
+      e.preventDefault();
+      render(n.dataset.node);
+    }
+  });
+});
+
+/* ---------- 3D sectored sphere (6 wedges) ---------- */
+(function(){
+  const stage = document.getElementById('sphereStage');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
+  camera.position.set(0, 0, 6.2);
+
+  const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  stage.appendChild(renderer.domElement);
+
+  // each stage of the loop gets its own tilt angle, 60° apart —
+  // matching the six-node structure of the diagram itself
+  const order = ['instinct','model','generation','verification','trail','interpretation'];
+  const tiltAngles = {
+    instinct: 63, model: 123, generation: 183,
+    verification: 243, trail: 303, interpretation: 3
+  };
+  let targetTilt = THREE.MathUtils.degToRad(tiltAngles.instinct);
+
+  const tiltGroup = new THREE.Group();
+  tiltGroup.rotation.z = targetTilt;
+  scene.add(tiltGroup);
+
+  const spinGroup = new THREE.Group();
+  tiltGroup.add(spinGroup);
+
+  const brass = new THREE.Color(0xb08968);
+  const human = new THREE.Color(0x6f8fae);
+  const activeColors = {
+    instinct:       new THREE.Color(0x6f8fae), // human blue
+    model:          new THREE.Color(0xb08968), // brass — structure
+    generation:     new THREE.Color(0xa8412f), // rust — the risky, fluent stage
+    verification:   new THREE.Color(0x5b8c78), // teal — the catch
+    trail:          new THREE.Color(0xc98a2c), // ochre — the record
+    interpretation: new THREE.Color(0x6f8fae)  // human blue
+  };
+
+  const wedges = {};
+  order.forEach((key, i) => {
+    const phiStart = i * (Math.PI / 3); // 60° per wedge
+    const geo = new THREE.SphereGeometry(1.7, 36, 36, phiStart, Math.PI/3, 0, Math.PI);
+
+    const isHuman = (key === 'instinct' || key === 'interpretation');
+    const mat = new THREE.MeshBasicMaterial({
+      color: isHuman ? human : brass,
+      transparent: true,
+      opacity: 0.15,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+
+    const mesh = new THREE.Mesh(geo, mat);
+    spinGroup.add(mesh);
+
+    const edges = new THREE.EdgesGeometry(geo, 1);
+    const line = new THREE.LineSegments(
+      edges,
+      new THREE.LineBasicMaterial({ color: isHuman ? human : brass, transparent:true, opacity:0.3 })
+    );
+    spinGroup.add(line);
+
+    wedges[key] = { mesh, mat, targetOpacity: 0.15, targetColor: (isHuman ? human : brass).clone() };
+  });
+
+  const ringMat = new THREE.LineBasicMaterial({ color: 0x8a6b52, transparent:true, opacity:0.28 });
+  [ [0,0,0], [0,Math.PI/2,0], [Math.PI/2,0,0] ].forEach(rot=>{
+    const ringGeo = new THREE.RingGeometry(1.72,1.735,64);
+    ringGeo.rotateX(Math.PI/2);
+    const ring = new THREE.LineLoop(new THREE.EdgesGeometry(ringGeo), ringMat);
+    ring.rotation.set(rot[0], rot[1], rot[2]);
+    spinGroup.add(ring);
+  });
+
+  function resize(){
+    const w = stage.clientWidth, h = stage.clientHeight;
+    if(!w || !h) return;
+    renderer.setSize(w, h, false);
+    camera.aspect = w/h;
+    camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  function tick(){
+    if(!reduceMotion){ spinGroup.rotation.y += 0.0035; }
+    order.forEach(key=>{
+      const w = wedges[key];
+      w.mat.opacity += (w.targetOpacity - w.mat.opacity) * 0.08;
+      w.mat.color.lerp(w.targetColor, 0.08);
+    });
+    if(!reduceMotion){
+      let diff = targetTilt - tiltGroup.rotation.z;
+      diff = ((diff + Math.PI) % (Math.PI*2)) - Math.PI;
+      tiltGroup.rotation.z += diff * 0.045;
+    } else {
+      tiltGroup.rotation.z = targetTilt;
+    }
+    renderer.render(scene, camera);
+    requestAnimationFrame(tick);
+  }
+  tick();
+
+  window.__illuminateWedge = function(key){
+    order.forEach(k=>{
+      const active = k === key;
+      wedges[k].targetOpacity = active ? 0.55 : 0.13;
+      wedges[k].targetColor = active ? activeColors[k].clone() : (k==='instinct'||k==='interpretation' ? human.clone() : brass.clone());
+    });
+    targetTilt = THREE.MathUtils.degToRad(tiltAngles[key]);
+  };
+})();
+
+</script>
+</body>
+</html>
