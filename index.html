@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Gears — A Lattice of Coupled Lock-In</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;700;900&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+  :root{
+    --bg:#14140f;
+    --panel:#1c1c16;
+    --panel-line:#302e26;
+    --iron:#3a382e;
+    --brass:#b08968;
+    --brass-dim:#8a6b52;
+    --rust:#a8412f;
+    --paper:#e8e2d0;
+    --dim:#8a8570;
+    --dim2:#5f5c4d;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse 900px 600px at 50% -10%, #201f17 0%, var(--bg) 60%);
+    color:var(--paper);
+    font-family:'Source Serif 4', serif;
+    min-height:100vh;
+    padding:56px 20px 80px;
+  }
+  .wrap{max-width:1040px;margin:0 auto;}
+
+  /* ---------- Header ---------- */
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    color:var(--brass);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:18px;
+  }
+  .eyebrow::before{
+    content:"";
+    width:22px;height:1px;
+    background:var(--brass-dim);
+    display:inline-block;
+  }
+  h1{
+    font-family:'Big Shoulders Display', sans-serif;
+    font-weight:900;
+    font-size:clamp(40px, 7vw, 78px);
+    line-height:.92;
+    letter-spacing:-0.01em;
+    margin:0 0 22px;
+    color:var(--paper);
+    text-transform:uppercase;
+  }
+  h1 span{color:var(--brass);}
+  .thesis{
+    font-size:clamp(16px, 2vw, 19px);
+    line-height:1.65;
+    color:#cdc7b4;
+    max-width:640px;
+    font-weight:400;
+  }
+  .thesis em{
+    font-style:italic;
+    color:var(--paper);
+  }
+
+  /* ---------- Diagram section ---------- */
+  .stage{
+    margin-top:56px;
+    display:grid;
+    grid-template-columns: minmax(0,1fr) minmax(260px, 320px);
+    gap:28px;
+    align-items:start;
+  }
+  @media (max-width:760px){
+    .stage{grid-template-columns:1fr;}
+  }
+
+  .diagram-panel{
+    background:
+      radial-gradient(circle at 50% 50%, #241f16 0%, var(--panel) 65%);
+    border:1px solid var(--panel-line);
+    border-radius:4px;
+    padding:8px;
+    position:relative;
+  }
+  .diagram-panel::before{
+    content:"FIG. 1 — FEEDBACK LATTICE";
+    position:absolute;
+    top:14px; left:18px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    letter-spacing:.15em;
+    color:var(--dim2);
+  }
+
+  svg{width:100%; height:auto; display:block; position:relative; z-index:2;}
+
+  .sphere-stage{
+    position:absolute;
+    top:50%; left:50%;
+    width:38%;
+    aspect-ratio:1;
+    transform:translate(-50%,-50%);
+    z-index:1;
+    pointer-events:none;
+  }
+  .sphere-stage canvas{
+    width:100% !important;
+    height:100% !important;
+    display:block;
+  }
+
+  .edge-loop{
+    fill:none;
+    stroke:var(--brass);
+    stroke-width:1.7;
+    stroke-dasharray: 3 7;
+    opacity:.9;
+  }
+  .edge-loop.flow{
+    animation: dashflow 5s linear infinite;
+  }
+  .edge-cross{
+    fill:none;
+    stroke:var(--iron);
+    stroke-width:1;
+    stroke-dasharray: 1 6;
+    opacity:.7;
+  }
+  .edge-exit{
+    fill:none;
+    stroke:var(--dim2);
+    stroke-width:1;
+    stroke-dasharray: 2 5;
+    opacity:.5;
+  }
+  @keyframes dashflow{
+    to{ stroke-dashoffset:-100; }
+  }
+
+  .gear-ring{
+    fill:none;
+    stroke:var(--iron);
+    stroke-width:1;
+    opacity:.55;
+    transform-origin:center;
+    animation: spin 40s linear infinite;
+  }
+  .gear-ring.rev{ animation-direction:reverse; animation-duration:55s;}
+
+  .node{cursor:pointer;}
+  .node circle.core{
+    fill:var(--panel);
+    stroke:var(--iron);
+    stroke-width:1.4;
+    transition:stroke .25s ease, fill .25s ease;
+  }
+  .node:hover circle.core, .node.active circle.core{
+    stroke:var(--brass);
+    fill:#242119;
+    filter: drop-shadow(0 0 10px rgba(176,137,104,.65)) drop-shadow(0 0 22px rgba(176,137,104,.3));
+  }
+  .node.locked circle.core{
+    stroke:var(--rust);
+  }
+  .node text.label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px;
+    font-weight:600;
+    letter-spacing:.04em;
+    fill:var(--paper);
+    text-transform:uppercase;
+    text-anchor:middle;
+  }
+  .node text.sub{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:8.5px;
+    fill:var(--dim);
+    text-anchor:middle;
+    letter-spacing:.03em;
+  }
+  .node:focus{ outline:none; }
+  .node:focus circle.core{ stroke:var(--brass); stroke-width:2; }
+
+  .exit-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:8.5px;
+    fill:var(--dim2);
+    letter-spacing:.05em;
+  }
+
+  /* ---------- Detail panel ---------- */
+  .detail{
+    background:var(--panel);
+    border:1px solid var(--panel-line);
+    border-radius:4px;
+    padding:22px 22px 20px;
+    min-height:340px;
+    display:flex;
+    flex-direction:column;
+  }
+  .detail .tag{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    letter-spacing:.18em;
+    color:var(--brass);
+    text-transform:uppercase;
+    margin-bottom:10px;
+  }
+  .detail h2{
+    font-family:'Big Shoulders Display', sans-serif;
+    font-weight:700;
+    font-size:26px;
+    text-transform:uppercase;
+    letter-spacing:.01em;
+    margin:0 0 14px;
+    color:var(--paper);
+  }
+  .detail p{
+    font-size:14.5px;
+    line-height:1.6;
+    color:#cdc7b4;
+    margin:0 0 12px;
+  }
+  .detail .feeds{
+    margin-top:auto;
+    padding-top:14px;
+    border-top:1px solid var(--panel-line);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    color:var(--dim);
+    letter-spacing:.03em;
+  }
+  .detail .feeds b{color:var(--brass); font-weight:500;}
+
+  /* ---------- Footnote strip ---------- */
+  .footnote{
+    margin-top:20px;
+    padding:14px 18px;
+    border:1px dashed var(--panel-line);
+    border-radius:4px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px;
+    color:var(--dim);
+    line-height:1.6;
+  }
+  .footnote b{color:var(--dim);}
+
+  @media (prefers-reduced-motion: reduce){
+    .edge-loop.flow, .gear-ring{ animation:none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow">A working model — not a prophecy</div>
+  <h1>The <span>Gears</span><br>Read as a Lattice</h1>
+  <p class="thesis">
+    Tyranny is not a foreign species of arrangement that descends on a society from outside.
+    It is what happens when four mechanisms that are <em>always running</em> — material
+    control, trait selection, information flow, and the emotional-moral cost of seeing
+    clearly — stop operating loosely and lock into a single, self-reinforcing loop.
+    Click a gear below to read how it drives the next one.
+  </p>
+
+  <div class="stage">
+    <div class="diagram-panel">
+      <div class="sphere-stage" id="sphereStage"></div>
+      <svg viewBox="0 0 600 600" role="img" aria-label="Diagram of four interlocking gears: Gears, Communications, Emotional Intelligence and Moral Reasoning, and Traits, connected in a feedback loop with cross-links, with a rotating four-sectored glowing sphere at the centre.">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="#b08968"></path>
+          </marker>
+
+          <filter id="edgeGlow" x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="3.2" result="blur"></feGaussianBlur>
+            <feMerge>
+              <feMergeNode in="blur"></feMergeNode>
+              <feMergeNode in="SourceGraphic"></feMergeNode>
+            </feMerge>
+          </filter>
+
+          <filter id="nodeGlow" x="-80%" y="-80%" width="260%" height="260%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur"></feGaussianBlur>
+            <feMerge>
+              <feMergeNode in="blur"></feMergeNode>
+              <feMergeNode in="SourceGraphic"></feMergeNode>
+            </feMerge>
+          </filter>
+
+          <radialGradient id="ambientGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#b08968" stop-opacity="0.16"></stop>
+            <stop offset="55%" stop-color="#b08968" stop-opacity="0.05"></stop>
+            <stop offset="100%" stop-color="#b08968" stop-opacity="0"></stop>
+          </radialGradient>
+        </defs>
+
+        <!-- ambient glow behind the whole lattice -->
+        <circle cx="300" cy="300" r="280" fill="url(#ambientGlow)"></circle>
+
+        <!-- decorative gear rings -->
+        <circle class="gear-ring" cx="300" cy="300" r="255"></circle>
+        <circle class="gear-ring rev" cx="300" cy="300" r="230" stroke-dasharray="2 10"></circle>
+
+        <!-- cross links (lattice) -->
+        <path class="edge-cross" d="M 300 110 Q 300 300 300 490"></path>
+        <path class="edge-cross" d="M 110 300 Q 300 300 490 300"></path>
+
+        <!-- exit-condition ghost edges -->
+        <path class="edge-exit" d="M 300 80 Q 200 20 130 40"></path>
+        <path class="edge-exit" d="M 520 300 Q 590 250 580 180"></path>
+        <text class="exit-label" x="150" y="30">RUPTURE?</text>
+        <text class="exit-label" x="530" y="200">FRACTURE?</text>
+
+        <!-- primary clockwise loop: Gears(top) -> Communications(right) -> EI(bottom) -> Traits(left) -> Gears -->
+        <path id="edge1" class="edge-loop flow" filter="url(#edgeGlow)" marker-end="url(#arrow)" d="M 330 95 Q 460 140 505 285"></path>
+        <path id="edge2" class="edge-loop flow" filter="url(#edgeGlow)" marker-end="url(#arrow)" d="M 505 320 Q 460 460 330 505"></path>
+        <path id="edge3" class="edge-loop flow" filter="url(#edgeGlow)" marker-end="url(#arrow)" d="M 270 505 Q 140 460 95 320"></path>
+        <path id="edge4" class="edge-loop flow" filter="url(#edgeGlow)" marker-end="url(#arrow)" d="M 95 285 Q 140 140 270 95"></path>
+
+        <!-- Node: Gears (top) -->
+        <g class="node" tabindex="0" role="button" aria-label="Gears — material and institutional control" data-node="gears" transform="translate(300,80)">
+          <circle class="core" r="46"></circle>
+          <text class="label" y="-2">Gears</text>
+          <text class="sub" y="14">control</text>
+        </g>
+
+        <!-- Node: Communications (right) -->
+        <g class="node" tabindex="0" role="button" aria-label="Communications — information control" data-node="comms" transform="translate(520,300)">
+          <circle class="core" r="46"></circle>
+          <text class="label" y="-2">Comms</text>
+          <text class="sub" y="14">legibility</text>
+        </g>
+
+        <!-- Node: EI / Moral Reasoning (bottom) -->
+        <g class="node" tabindex="0" role="button" aria-label="Emotional intelligence and moral reasoning — feedback cost" data-node="ei" transform="translate(300,520)">
+          <circle class="core" r="46"></circle>
+          <text class="label" y="-2">EI / Moral</text>
+          <text class="sub" y="14">cost</text>
+        </g>
+
+        <!-- Node: Traits (left) -->
+        <g class="node" tabindex="0" role="button" aria-label="Traits — selection pressure" data-node="traits" transform="translate(80,300)">
+          <circle class="core" r="46"></circle>
+          <text class="label" y="-2">Traits</text>
+          <text class="sub" y="14">selection</text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="detail" id="detail">
+      <div class="tag">Select a gear</div>
+      <h2>How this reads</h2>
+      <p>Each node drives the one downstream of it. The dashed centre-lines are the
+      lattice's cross-links — the part that makes it a coupled system rather than
+      four separate stories: concentration doesn't just select traits, it also
+      reaches straight across to reshape what people can feel is true.</p>
+      <p>The faint outward lines marked <b style="color:var(--dim)">RUPTURE?</b>
+      and <b style="color:var(--dim)">FRACTURE?</b> are deliberately unresolved —
+      elite coalition breakdown, external shock, economic collapse. This model
+      describes the lock-in well. It doesn't yet describe what breaks it.</p>
+      <div class="feeds">Click any gear to open its detail →</div>
+    </div>
+  </div>
+
+  <div class="footnote">
+    <b>Reading note —</b> this is a descriptive model of how coercive systems
+    self-reinforce, built by combining ordinary feedback-loop thinking with
+    concepts already named in the literature (moral disengagement, moral injury,
+    elite-coalition theory). It is not a physical law, and the loop drawn here is
+    a claim to be tested against real cases, not a proof.
+  </div>
+
+</div>
+
+<script>
+const data = {
+  gears: {
+    tag: "01 — Material & Institutional Control",
+    title: "Gears",
+    body: [
+      "Control of resources, force, information, law, and infrastructure collapses into a narrow set of hands or institutions. The gears no longer merely constrain — they actively direct and punish.",
+      "Most people's available machinery shrinks toward zero: exit options, independent capital, and alternative structures are systematically reduced."
+    ],
+    feeds: "Feeds → Traits: concentrated control decides who rises and who is pruned."
+  },
+  traits: {
+    tag: "02 — Selection Pressure",
+    title: "Traits",
+    body: [
+      "At the top, the system selects for dominance, low affective empathy, high tolerance for others' suffering, and strong narrative control.",
+      "In the wider population it selects for fearfulness, conformity, and survival pragmatism — while isolating or punishing the smaller high-clarity, high-resistance minority."
+    ],
+    feeds: "Feeds → Comms: who holds power decides what information is allowed to travel."
+  },
+  comms: {
+    tag: "03 — Information Control",
+    title: "Communications",
+    body: [
+      "This is a primary control surface. Information flows are restricted, distorted, or monopolised — alternative signals are treated as threats.",
+      "The ability of ordinary people to make their reality legible to one another degrades. Propaganda, enforced silence, and manufactured consensus become core gears in their own right."
+    ],
+    feeds: "Feeds → EI / Moral: distorted information shapes what people are able to feel and reason about safely."
+  },
+  ei: {
+    tag: "04 — Feedback Cost",
+    title: "EI / Moral Reasoning",
+    body: [
+      "Emotional intelligence becomes both more costly and more necessary. Feeling the full reality of the system produces grief, rage, fear, or despair — many adapt by dulling it.",
+      "Moral reasoning is activated and attacked at once: people see the harm clearly, yet clarity is made dangerous or exhausting. The gap between what's known and what feels actionable is moral injury."
+    ],
+    feeds: "Feeds → Gears: the cost of resistance or compliance determines how much control the top can actually sustain."
+  }
+};
+
+const nodes = document.querySelectorAll('.node');
+const detail = document.getElementById('detail');
+
+function render(key){
+  const d = data[key];
+  detail.innerHTML = `
+    <div class="tag">${d.tag}</div>
+    <h2>${d.title}</h2>
+    ${d.body.map(p => `<p>${p}</p>`).join('')}
+    <div class="feeds">${d.feeds}</div>
+  `;
+  nodes.forEach(n => n.classList.toggle('active', n.dataset.node === key));
+  if(window.__illuminateWedge) window.__illuminateWedge(key);
+}
+
+nodes.forEach(n => {
+  n.addEventListener('click', () => render(n.dataset.node));
+  n.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter' || e.key === ' '){
+      e.preventDefault();
+      render(n.dataset.node);
+    }
+  });
+});
+
+/* ---------- 3D sectored sphere ---------- */
+(function(){
+  const stage = document.getElementById('sphereStage');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
+  camera.position.set(0, 0, 6.2);
+
+  const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  stage.appendChild(renderer.domElement);
+
+  // tilt group — the whole sphere sits inside this so we can set a fixed
+  // 63° axial tilt, then spin the sphere itself around that tilted axis
+  const tiltGroup = new THREE.Group();
+  tiltGroup.rotation.z = THREE.MathUtils.degToRad(63);
+  scene.add(tiltGroup);
+
+  const spinGroup = new THREE.Group();
+  tiltGroup.add(spinGroup);
+
+  const brass = new THREE.Color(0xb08968);
+  const rust  = new THREE.Color(0xa8412f);
+
+  // order matches the gear click order: gears, comms, ei, traits
+  const order = ['gears','comms','ei','traits'];
+  const wedges = {};
+
+  order.forEach((key, i) => {
+    const phiStart = i * (Math.PI / 2);
+    const geo = new THREE.SphereGeometry(1.7, 40, 40, phiStart, Math.PI/2, 0, Math.PI);
+
+    const mat = new THREE.MeshBasicMaterial({
+      color: brass,
+      transparent: true,
+      opacity: 0.16,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+
+    const mesh = new THREE.Mesh(geo, mat);
+    spinGroup.add(mesh);
+
+    // faint wireframe seam so segments read as distinct slices
+    const edges = new THREE.EdgesGeometry(geo, 1);
+    const line = new THREE.LineSegments(
+      edges,
+      new THREE.LineBasicMaterial({ color: brass, transparent:true, opacity:0.35 })
+    );
+    spinGroup.add(line);
+
+    wedges[key] = { mesh, mat, targetOpacity: 0.16, targetColor: brass.clone() };
+  });
+
+  // thin equator + meridian rings for a bit of "armillary sphere" structure
+  const ringMat = new THREE.LineBasicMaterial({ color: 0x8a6b52, transparent:true, opacity:0.3 });
+  [ [0,0,0], [0,Math.PI/2,0], [Math.PI/2,0,0] ].forEach(rot=>{
+    const ringGeo = new THREE.RingGeometry(1.72,1.735,64);
+    ringGeo.rotateX(Math.PI/2);
+    const ring = new THREE.LineLoop(new THREE.EdgesGeometry(ringGeo), ringMat);
+    ring.rotation.set(rot[0], rot[1], rot[2]);
+    spinGroup.add(ring);
+  });
+
+  function resize(){
+    const w = stage.clientWidth, h = stage.clientHeight;
+    if(!w || !h) return;
+    renderer.setSize(w, h, false);
+    camera.aspect = w/h;
+    camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  let raf;
+  function tick(){
+    if(!reduceMotion){
+      spinGroup.rotation.y += 0.0035;
+    }
+    // ease each wedge toward its target opacity/color
+    order.forEach(key=>{
+      const w = wedges[key];
+      w.mat.opacity += (w.targetOpacity - w.mat.opacity) * 0.08;
+      w.mat.color.lerp(w.targetColor, 0.08);
+    });
+    renderer.render(scene, camera);
+    raf = requestAnimationFrame(tick);
+  }
+  tick();
+
+  // expose an illuminate function used by the existing gear click handler
+  window.__illuminateWedge = function(key){
+    order.forEach(k=>{
+      const active = k === key;
+      wedges[k].targetOpacity = active ? 0.55 : 0.14;
+      wedges[k].targetColor = active ? rust.clone() : brass.clone();
+    });
+  };
+})();
+
+</script>
+</body>
+</html>
