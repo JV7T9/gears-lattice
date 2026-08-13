@@ -2,7 +2,7 @@ GEARS LATTICE: An interactive systems diagram modeling how coercive systems lock
 
 
 
-[**View the live diagram →**](https://jv7t9.github.io/gears-lattice/) screenshot.png
+[**View the live diagram →**](https://JV7T9.github.io/gears-lattice/) screenshot.png
 
 
 
