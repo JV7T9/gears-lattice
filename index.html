@@ -463,17 +463,27 @@ nodes.forEach(n => {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   stage.appendChild(renderer.domElement);
 
-  // tilt group — the whole sphere sits inside this so we can set a fixed
-  // 63° axial tilt, then spin the sphere itself around that tilted axis
+  // tilt group — the whole sphere sits inside this so we can set an
+  // axial tilt, then spin the sphere itself around that tilted axis.
+  // each gear gets its own tilt angle, 90° apart, so clicking a different
+  // gear doesn't just change color — it reorients the whole spin axis.
+  const tiltAngles = { gears: 63, comms: 153, ei: 243, traits: 333 };
+  let targetTilt = THREE.MathUtils.degToRad(tiltAngles.gears);
+
   const tiltGroup = new THREE.Group();
-  tiltGroup.rotation.z = THREE.MathUtils.degToRad(63);
+  tiltGroup.rotation.z = targetTilt;
   scene.add(tiltGroup);
 
   const spinGroup = new THREE.Group();
   tiltGroup.add(spinGroup);
 
   const brass = new THREE.Color(0xb08968);
-  const rust  = new THREE.Color(0xa8412f);
+  const activeColors = {
+    gears:  new THREE.Color(0xa8412f), // rust — control, pressure
+    traits: new THREE.Color(0xc98a2c), // ochre — selection, growth
+    comms:  new THREE.Color(0x5b8c78), // verdigris — signal, transmission
+    ei:     new THREE.Color(0x6f8fae)  // steel blue — the one cool tone, feeling/cognition
+  };
 
   // order matches the gear click order: gears, comms, ei, traits
   const order = ['gears','comms','ei','traits'];
@@ -537,6 +547,15 @@ nodes.forEach(n => {
       w.mat.opacity += (w.targetOpacity - w.mat.opacity) * 0.08;
       w.mat.color.lerp(w.targetColor, 0.08);
     });
+    // ease the tilt toward its target, always taking the shortest
+    // angular path so it never spins the long way round on wraparound
+    if(!reduceMotion){
+      let diff = targetTilt - tiltGroup.rotation.z;
+      diff = ((diff + Math.PI) % (Math.PI*2)) - Math.PI;
+      tiltGroup.rotation.z += diff * 0.045;
+    } else {
+      tiltGroup.rotation.z = targetTilt;
+    }
     renderer.render(scene, camera);
     raf = requestAnimationFrame(tick);
   }
@@ -547,8 +566,9 @@ nodes.forEach(n => {
     order.forEach(k=>{
       const active = k === key;
       wedges[k].targetOpacity = active ? 0.55 : 0.14;
-      wedges[k].targetColor = active ? rust.clone() : brass.clone();
+      wedges[k].targetColor = active ? activeColors[k].clone() : brass.clone();
     });
+    targetTilt = THREE.MathUtils.degToRad(tiltAngles[key]);
   };
 })();
 
