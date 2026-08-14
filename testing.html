@@ -9,182 +9,141 @@
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;700;900&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#14140f;
-    --panel:#1c1c16;
-    --panel-line:#302e26;
-    --iron:#3a382e;
-    --brass:#b08968;
-    --brass-dim:#8a6b52;
-    --rust:#a8412f;
-    --paper:#e8e2d0;
-    --dim:#8a8570;
-    --dim2:#5f5c4d;
-    --caught:#5b8c78;
+    --bg:#14140f; --panel:#1c1c16; --panel-line:#302e26; --iron:#3a382e;
+    --brass:#b08968; --brass-dim:#8a6b52; --rust:#a8412f; --paper:#e8e2d0;
+    --dim:#8a8570; --dim2:#5f5c4d; --caught:#5b8c78;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   body{
     background: radial-gradient(ellipse 900px 600px at 50% -10%, #201f17 0%, var(--bg) 60%);
-    color:var(--paper);
-    font-family:'Source Serif 4', serif;
-    min-height:100vh;
-    padding:56px 20px 80px;
+    color:var(--paper); font-family:'Source Serif 4', serif;
+    min-height:100vh; padding:56px 20px 80px;
   }
   .wrap{max-width:820px;margin:0 auto;}
 
   .back-link{
-    font-family:'IBM Plex Mono', monospace;
-    font-size:11px;
-    letter-spacing:.1em;
-    text-transform:uppercase;
-    color:var(--dim);
-    text-decoration:none;
-    display:inline-block;
-    margin-bottom:32px;
+    font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--dim); text-decoration:none;
+    display:inline-block; margin-bottom:32px;
   }
   .back-link:hover{ color:var(--brass); }
 
   .eyebrow{
-    font-family:'IBM Plex Mono', monospace;
-    font-size:11px;
-    letter-spacing:.22em;
-    text-transform:uppercase;
-    color:var(--brass);
-    display:flex;
-    align-items:center;
-    gap:10px;
-    margin-bottom:18px;
+    font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:.22em;
+    text-transform:uppercase; color:var(--brass); display:flex; align-items:center;
+    gap:10px; margin-bottom:18px;
   }
   .eyebrow::before{ content:""; width:22px;height:1px; background:var(--brass-dim); display:inline-block; }
 
   h1{
-    font-family:'Big Shoulders Display', sans-serif;
-    font-weight:900;
-    font-size:clamp(36px, 6vw, 60px);
-    line-height:.95;
-    letter-spacing:-0.01em;
-    margin:0 0 22px;
-    text-transform:uppercase;
+    font-family:'Big Shoulders Display', sans-serif; font-weight:900;
+    font-size:clamp(36px, 6vw, 60px); line-height:.95; letter-spacing:-0.01em;
+    margin:0 0 22px; text-transform:uppercase;
   }
   h1 span{ color:var(--brass); }
 
-  .thesis{
-    font-size:clamp(15px, 1.6vw, 18px);
-    line-height:1.65;
-    color:#cdc7b4;
-    max-width:640px;
-  }
-
-  h2{
-    font-family:'Big Shoulders Display', sans-serif;
-    font-weight:700;
-    font-size:26px;
-    text-transform:uppercase;
-    letter-spacing:.01em;
-    color:var(--paper);
-    margin:52px 0 6px;
-    padding-bottom:10px;
-    border-bottom:1px solid var(--panel-line);
-  }
-  h2 .step-num{
-    font-family:'IBM Plex Mono', monospace;
-    color:var(--brass);
-    font-size:15px;
-    letter-spacing:.1em;
-    display:block;
-    margin-bottom:4px;
-  }
+  .thesis{ font-size:clamp(15px, 1.6vw, 18px); line-height:1.65; color:#cdc7b4; max-width:640px; }
 
   p{ font-size:15px; line-height:1.7; color:#cdc7b4; margin:14px 0; }
   strong{ color:var(--paper); }
 
-  .card{
+  details.log{
     background:var(--panel);
     border:1px solid var(--panel-line);
-    border-radius:4px;
+    border-radius:6px;
+    margin:22px 0;
+    overflow:hidden;
+  }
+  details.log[open]{ border-color:var(--brass-dim); }
+
+  summary.log-header{
+    list-style:none;
+    cursor:pointer;
     padding:20px 22px;
-    margin:18px 0;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    flex-wrap:wrap;
   }
+  summary.log-header::-webkit-details-marker{ display:none; }
+  summary.log-header::marker{ content:""; }
+
+  .log-header-left{ display:flex; flex-direction:column; gap:4px; }
+  .log-tag{
+    font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:.18em;
+    text-transform:uppercase; color:var(--brass);
+  }
+  .log-title{
+    font-family:'Big Shoulders Display', sans-serif; font-weight:700;
+    font-size:22px; text-transform:uppercase; color:var(--paper); letter-spacing:.005em;
+  }
+  .log-date{
+    font-family:'IBM Plex Mono', monospace; font-size:10.5px; color:var(--dim);
+  }
+
+  .status-pill{
+    display:inline-flex; align-items:center; gap:6px;
+    font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:.1em;
+    text-transform:uppercase; padding:5px 12px; border-radius:20px;
+    background:rgba(176,137,104,.12); border:1px solid var(--brass-dim); color:var(--brass);
+    white-space:nowrap;
+  }
+  .status-pill.resolved{ background:rgba(91,140,120,.12); border-color:var(--caught); color:var(--caught); }
+
+  .chevron{
+    font-family:'IBM Plex Mono', monospace; color:var(--dim); font-size:14px;
+    transition: transform .2s ease; flex-shrink:0;
+  }
+  details.log[open] .chevron{ transform: rotate(90deg); color:var(--brass); }
+
+  .log-body{ padding:0 22px 26px; border-top:1px solid var(--panel-line); }
+  .log-body h3{
+    font-family:'Big Shoulders Display', sans-serif; font-weight:700; font-size:15px;
+    text-transform:uppercase; letter-spacing:.06em; color:var(--brass-dim);
+    margin:26px 0 4px;
+  }
+
+  .card{ background:var(--bg); border:1px solid var(--panel-line); border-radius:4px; padding:18px 20px; margin:14px 0; }
   .card.gemini{ border-left:3px solid var(--rust); }
+  .card.grok{ border-left:3px solid #7c6a9c; }
   .card.claude{ border-left:3px solid var(--caught); }
-
-  .card .tag{
-    font-family:'IBM Plex Mono', monospace;
-    font-size:10px;
-    letter-spacing:.18em;
-    text-transform:uppercase;
-    margin-bottom:10px;
-  }
+  .card .tag{ font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:.18em; text-transform:uppercase; margin-bottom:10px; }
   .card.gemini .tag{ color:var(--rust); }
+  .card.grok .tag{ color:#9c8ab8; }
   .card.claude .tag{ color:var(--caught); }
-
-  .card p{ font-size:14.5px; margin:8px 0; }
+  .card p{ font-size:14px; margin:8px 0; }
   .card p:last-child{ margin-bottom:0; }
 
   .verdict{
-    font-family:'IBM Plex Mono', monospace;
-    font-size:11px;
-    letter-spacing:.05em;
-    color:var(--dim);
-    margin-top:10px;
-    padding-top:10px;
-    border-top:1px dashed var(--panel-line);
+    font-family:'IBM Plex Mono', monospace; font-size:10.5px; letter-spacing:.03em;
+    color:var(--dim); margin-top:10px; padding-top:10px; border-top:1px dashed var(--panel-line);
   }
   .verdict b{ color:var(--caught); font-weight:600; }
 
   .prediction-box{
-    background:linear-gradient(180deg, #241f16 0%, var(--panel) 100%);
-    border:1px solid var(--brass-dim);
-    border-radius:4px;
-    padding:24px 24px 20px;
-    margin:24px 0;
+    background:linear-gradient(180deg, #241f16 0%, var(--bg) 100%);
+    border:1px solid var(--brass-dim); border-radius:4px; padding:22px 22px 18px; margin:18px 0;
   }
-  .prediction-box .tag{
-    font-family:'IBM Plex Mono', monospace;
-    font-size:10px;
-    letter-spacing:.18em;
-    color:var(--brass);
-    text-transform:uppercase;
-    margin-bottom:10px;
-  }
-  .prediction-box h3{
-    font-family:'Big Shoulders Display', sans-serif;
-    font-size:20px;
-    text-transform:uppercase;
-    color:var(--paper);
-    margin:0 0 12px;
-  }
-  .prediction-box p{ font-size:14.5px; }
+  .prediction-box .tag{ font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:.18em; color:var(--brass); text-transform:uppercase; margin-bottom:10px; }
+  .prediction-box h4{ font-family:'Big Shoulders Display', sans-serif; font-size:18px; text-transform:uppercase; color:var(--paper); margin:0 0 12px; }
+  .prediction-box p{ font-size:14px; }
   .prediction-box .meta{
-    font-family:'IBM Plex Mono', monospace;
-    font-size:11px;
-    color:var(--dim);
-    margin-top:16px;
-    padding-top:14px;
-    border-top:1px solid var(--panel-line);
-  }
-  .status-pill{
-    display:inline-block;
-    font-family:'IBM Plex Mono', monospace;
-    font-size:10px;
-    letter-spacing:.1em;
-    text-transform:uppercase;
-    padding:4px 10px;
-    border-radius:20px;
-    background:rgba(176,137,104,.12);
-    border:1px solid var(--brass-dim);
-    color:var(--brass);
+    font-family:'IBM Plex Mono', monospace; font-size:10.5px; color:var(--dim);
+    margin-top:14px; padding-top:12px; border-top:1px solid var(--panel-line);
   }
 
+  .flag-box{
+    background:rgba(176,137,104,.06); border:1px dashed var(--brass-dim); border-radius:4px;
+    padding:16px 18px; margin:16px 0;
+  }
+  .flag-box .tag{ font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:.15em; color:var(--brass); text-transform:uppercase; margin-bottom:8px; }
+  .flag-box p{ font-size:13.5px; margin:6px 0; }
+
   .footnote{
-    margin-top:36px;
-    padding:14px 18px;
-    border:1px dashed var(--panel-line);
-    border-radius:4px;
-    font-family:'IBM Plex Mono', monospace;
-    font-size:11.5px;
-    color:var(--dim);
-    line-height:1.6;
+    margin-top:36px; padding:14px 18px; border:1px dashed var(--panel-line); border-radius:4px;
+    font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:var(--dim); line-height:1.6;
   }
 </style>
 </head>
@@ -193,103 +152,212 @@
 
   <a class="back-link" href="index.html" target="_top">← Back to the lattice</a>
 
-  <div class="eyebrow">Testing portal — log 001</div>
+  <div class="eyebrow">Testing portal</div>
   <h1>The Model <span>Under Load</span></h1>
   <p class="thesis">
-    A model that only ever explains the past isn't worth much. So I ran the Gears
-    model through Gemini 3, prompted it to use the framework as a live prediction
-    tool against the ongoing Venezuela transition, then fact-checked the result
-    against Claude. Here's exactly what happened — including where it went wrong.
+    A model that only ever explains the past isn't worth much. Each entry below
+    is a dated, separate attempt to use the Gears model as a live prediction
+    tool — including where those attempts went wrong. Nothing here is edited
+    after the fact to look more accurate. Newest entry first.
+  </p>
+  <p class="thesis">
+    Both entries below caught the same underlying error, in two different AI
+    engines. That repetition matters: it means the problem isn't a flaw in
+    either model specifically. Financial and political forecasting writing —
+    the real documents this kind of output imitates — is culturally written in
+    confident, declarative language almost regardless of true uncertainty. Both
+    engines correctly reproduced that convention, including the part of it that
+    overstates certainty. Naming that condition is the redemption here: neither
+    engine "failed" at prediction so much as it faithfully inherited a habit
+    already built into the genre it was asked to write in. Source documents are
+    linked in full below so you can read what each engine actually produced,
+    unedited, and judge that for yourself.
   </p>
 
-  <h2><span class="step-num">Step 01</span>The prompt</h2>
-  <p>
-    I asked Gemini 3 to take the Gears model and apply it to post-Maduro Venezuela
-    as a prediction exercise — to see whether the four-gear framework could say
-    something useful about where the country's transition was actually heading.
-  </p>
+  <details class="log" open>
+    <summary class="log-header">
+      <div class="log-header-left">
+        <span class="log-tag">Log 002 — Stablecoin market</span>
+        <span class="log-title">The Sentence Didn't Inherit the Discipline</span>
+        <span class="log-date">14 August 2026</span>
+      </div>
+      <span class="status-pill">● Open — unresolved</span>
+      <span class="chevron">▶</span>
+    </summary>
 
-  <h2><span class="step-num">Step 02</span>What Gemini produced</h2>
-  <div class="card gemini">
-    <div class="tag">Gemini 3 output</div>
-    <p>Gemini built a full article, "The Architecture of Re-Lock," stating —
-    in the present tense, as settled fact — that Venezuela's state apparatus
-    had already completed a "phase transition" into a new, stable
-    "transactional hybrid state," with named companies and bondholders
-    described as the literal "gear teeth" locking that new equilibrium
-    into place.</p>
-    <div class="verdict">Read as: a finished result. Written like an autopsy.</div>
-  </div>
+    <div class="log-body">
+      <p>
+        Second attempt at the same process — this time using Grok, prompted to
+        apply Gears to a live case, the stablecoin market. It used the
+        corrected document template from Log 001. It still made a version of
+        the same mistake, in a subtler place.
+      </p>
+      <p>
+        <a href="Stablecoin_Landing_Prediction_Grok.pdf" target="_blank" style="color:var(--brass); border-bottom:1px dashed var(--brass);">→ Read Grok's original output in full (PDF)</a>
+      </p>
 
-  <h2><span class="step-num">Step 03</span>What Claude caught</h2>
-  <div class="card claude">
-    <div class="tag">Claude fact-check</div>
-    <p><strong>1. Real facts, wrong tense.</strong> The underlying facts Gemini
-    used — Centerview Partners' appointment, Chevron's Orinoco stake increase,
-    the $150–170B restructuring figure — all checked out against real reporting.
-    But every one of them predated Gemini's writing. It wasn't predicting
-    anything; it was relabeling already-public news with the model's
-    vocabulary after the fact.</p>
-    <p><strong>2. A settled outcome that isn't settled.</strong> Live reporting
-    as of August 2026 shows talks between the Rodríguez government and the
-    opposition only began August 6 — no election date set, no agreed political
-    structure, nothing resembling the "hybrid state" Gemini described as
-    already built. What's actually happening is closer to what analysts call
-    "normalization without transition" — economic deals advancing specifically
-    <em>instead of</em> a real political settlement, not proof one has formed.</p>
-    <p><strong>3. A fabricated detail.</strong> Gemini named a "Bondholder
-    Steering Group" of three firms. The real body is the Venezuela Creditor
-    Committee — a different name, with several real members missing from
-    Gemini's list.</p>
-    <div class="verdict">Verdict: <b>retrodiction dressed as prediction</b> —
-    fluent, well-sourced, and pointed at an outcome that hadn't happened yet.</div>
-  </div>
+      <h3>What Grok produced</h3>
+      <div class="card grok">
+        <div class="tag">Grok output</div>
+        <p>A structurally sound document — snapshot, gear mapping, falsifiers,
+        prior-error correction note, all present and well-formed. Market data
+        (USDT ~$183B, ~61–64% share; USDC ~$72B; top-two dominance ~85–89%) was
+        accurate against independent trackers.</p>
+        <p>The prediction itself: <em>"USDT remains the strongest broad landing
+        hold point... concentration at the top two remains the dominant lock-in
+        feature."</em></p>
+        <div class="verdict">Read as: today's snapshot, restated as a forecast.</div>
+      </div>
 
-  <h2><span class="step-num">Step 04</span>The corrected, dated prediction</h2>
-  <p>
-    Once the tense problem was caught, the honest move was to write the actual
-    prediction properly — dated, falsifiable, and locked before the outcome is
-    known, rather than narrated after.
-  </p>
+      <h3>What Claude caught</h3>
+      <div class="card claude">
+        <div class="tag">Claude fact-check</div>
+        <p><strong>1. Predicting the present.</strong> USDT is dominant right
+        now. Forecasting "the currently true thing stays true" isn't a test of
+        the model — it's the null hypothesis. A model only earns credit by
+        calling something that isn't already obvious from today's numbers.</p>
+        <p><strong>2. A live disconfirming signal, missing from the snapshot.</strong>
+        Independent reporting from two days before this document's own date
+        shows USDT's supply contracted by roughly $4B over 60 days, with $870M
+        redeemed in just 11 days — and USDC's supply declining too, which
+        undercuts the simple "capital rotates between the top two" story the
+        document assumes. That data was available and wasn't cited.</p>
+        <p><strong>3. Structural correction without sentence-level correction.</strong>
+        This is the important one. The document has a properly hedged
+        <em>structure</em> — a Falsifiers section exists, thresholds are specific.
+        But the individual prediction sentences inside the structure are still
+        written with full declarative confidence, the same as Log 001. Copying
+        the scaffolding of a corrected document doesn't automatically copy the
+        discipline that scaffolding was built to enforce.</p>
+        <div class="verdict">Verdict: <b>template inherited, discipline didn't</b> —
+        a more subtle repeat of the Log 001 error, one level deeper, this time
+        in a different engine entirely.</div>
+      </div>
 
-  <div class="prediction-box">
-    <div class="tag">Recorded August 14, 2026</div>
-    <h3>Venezuela will not hold a genuinely free and fair election within 18 months</h3>
-    <p>Gears predicts continued "normalization without transition" — the Rodríguez
-    government using material control, trait selection, comms framing, and
-    fatigue-driven pragmatism to entrench its position while avoiding a real
-    handoff of power — for as long as that strategy stays viable.</p>
-    <div class="meta">
-      <span class="status-pill">● Open — unresolved</span><br><br>
-      Proven wrong by: a credibly free election held and contested within the
-      window, with a real possibility of transfer of power.<br>
-      Known weakness: this model has no theory of rupture yet — it predicts
-      continuation by default, not collapse. An external shock or internal
-      elite fracture could break the forecast without the four-gear logic
-      itself being wrong.
+      <div class="flag-box">
+        <div class="tag">Flagged for Human-AI Relations</div>
+        <p>This isn't a Grok-specific flaw, and it isn't a Gemini-specific flaw
+        either — the same error showed up in two unrelated engines. Financial
+        and political forecasting genres — the real documents this kind of
+        output imitates — are culturally written in confident, declarative
+        register almost regardless of true uncertainty. A model prompted to
+        "sound like a real analyst report" correctly reproduces that
+        convention, hedge-language and all — including the part of the
+        convention that overstates certainty. The failure lives in the genre
+        both engines were asked to imitate, not uniquely in either model
+        producing it.</p>
+      </div>
+
+      <h3>The corrected, dated prediction</h3>
+      <div class="prediction-box">
+        <div class="tag">Recorded 14 August 2026</div>
+        <h4>USDT's dominant share is more contested over the next 6 months than the snapshot alone suggests</h4>
+        <p>Gears' material-control gear predicts continued top-two structural
+        dominance in absolute terms (no credible third issuer reaching scale
+        within 6 months). But the live redemption pressure on both USDT and
+        USDC — not yet reflected in a share shift to any challenger — is the
+        variable actually worth tracking, not the static concentration number
+        this document led with.</p>
+        <div class="meta">
+          <span class="status-pill">● Open — unresolved</span><br><br>
+          Proven wrong by: continued or accelerating simultaneous contraction
+          in both USDT and USDC supply without a corresponding rise in a
+          named challenger — which would suggest capital leaving stablecoins
+          entirely, a dynamic outside this model's four gears.<br>
+          Known weakness: same as Log 001 — no rupture theory. This entry
+          additionally exposes a second weakness: the model has no built-in
+          check for whether a "prediction" is actually just describing the
+          present.
+        </div>
+      </div>
     </div>
-  </div>
+  </details>
 
-  <h2><span class="step-num">Step 05</span>What this test actually proved</h2>
-  <p>
-    Not that Gears works. What it proved is narrower and more useful: that
-    running a model through one AI and fact-checking it against another is a
-    real, repeatable way to catch a specific failure mode — confident
-    retrodiction dressed as forecasting — before it gets published as if it
-    were validated. The model's own worth is still an open question. This log
-    stays here, unedited, so the eventual answer can be checked against what
-    was actually claimed, on the date it was claimed.
-  </p>
+  <details class="log">
+    <summary class="log-header">
+      <div class="log-header-left">
+        <span class="log-tag">Log 001 — Venezuela transition</span>
+        <span class="log-title">Retrodiction Dressed as Prediction</span>
+        <span class="log-date">14 August 2026</span>
+      </div>
+      <span class="status-pill">● Open — unresolved</span>
+      <span class="chevron">▶</span>
+    </summary>
+
+    <div class="log-body">
+      <p>
+        First attempt. I asked Gemini 3 to take the Gears model and apply it to
+        post-Maduro Venezuela as a prediction exercise — to see whether the
+        four-gear framework could say something useful about where the
+        country's transition was actually heading.
+      </p>
+      <p>
+        <a href="Architecture_of_Re-Lock_Gemini3.pdf" target="_blank" style="color:var(--brass); border-bottom:1px dashed var(--brass);">→ Read Gemini's original output in full (PDF)</a>
+      </p>
+
+      <h3>What Gemini produced</h3>
+      <div class="card gemini">
+        <div class="tag">Gemini 3 output</div>
+        <p>A full article, "The Architecture of Re-Lock," stating — in the
+        present tense, as settled fact — that Venezuela's state apparatus had
+        already completed a "phase transition" into a new, stable
+        "transactional hybrid state," with named companies and bondholders
+        described as the literal "gear teeth" locking that new equilibrium
+        into place.</p>
+        <div class="verdict">Read as: a finished result. Written like an autopsy.</div>
+      </div>
+
+      <h3>What Claude caught</h3>
+      <div class="card claude">
+        <div class="tag">Claude fact-check</div>
+        <p><strong>1. Real facts, wrong tense.</strong> The underlying facts —
+        Centerview Partners' appointment, Chevron's Orinoco stake increase, the
+        $150–170B restructuring figure — all checked out. But every one of them
+        predated the writing. It wasn't predicting anything; it was relabeling
+        already-public news with the model's vocabulary after the fact.</p>
+        <p><strong>2. A settled outcome that isn't settled.</strong> Live
+        reporting as of August 2026 shows talks between the Rodríguez
+        government and the opposition only began August 6 — no election date
+        set, no agreed political structure, nothing resembling the "hybrid
+        state" described as already built.</p>
+        <p><strong>3. A fabricated detail.</strong> A "Bondholder Steering
+        Group" of three firms was named. The real body is the Venezuela
+        Creditor Committee — a different name, missing several real members.</p>
+        <div class="verdict">Verdict: <b>retrodiction dressed as prediction</b> —
+        fluent, well-sourced, pointed at an outcome that hadn't happened yet.</div>
+      </div>
+
+      <h3>The corrected, dated prediction</h3>
+      <div class="prediction-box">
+        <div class="tag">Recorded 14 August 2026</div>
+        <h4>Venezuela will not hold a genuinely free and fair election within 18 months</h4>
+        <p>Gears predicts continued "normalization without transition" — the
+        Rodríguez government using material control, trait selection, comms
+        framing, and fatigue-driven pragmatism to entrench its position while
+        avoiding a real handoff of power — for as long as that strategy stays
+        viable.</p>
+        <div class="meta">
+          <span class="status-pill">● Open — unresolved</span><br><br>
+          Proven wrong by: a credibly free election held and contested within
+          the window, with a real possibility of transfer of power.<br>
+          Known weakness: this model has no theory of rupture yet — it
+          predicts continuation by default, not collapse. An external shock or
+          internal elite fracture could break the forecast without the
+          four-gear logic itself being wrong.
+        </div>
+      </div>
+    </div>
+  </details>
 
   <div class="footnote">
-    <b>Log note —</b> this page will not be edited retroactively to look more
-    accurate after the fact. If the prediction above is wrong, it stays wrong,
-    visibly, with a note added below it — not quietly rewritten.
+    <b>Log note —</b> entries on this page are not edited retroactively to look
+    more accurate after the fact. If a prediction is wrong, it stays wrong,
+    visibly, with a note added — not quietly rewritten.
   </div>
 
   <div class="footnote" style="margin-top:14px;">
     <b>→ <a href="human-ai-relations.html" target="_blank" style="color:var(--brass); border-bottom:1px dashed var(--brass);">The Loop Behind the Model</a> —</b>
-    a diagram of the actual process that produced this test: instinct, structure,
+    a diagram of the actual process behind these tests: instinct, structure,
     generation, verification, trail, and back to a reader — not an answer.
   </div>
 
